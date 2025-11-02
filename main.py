@@ -97,6 +97,7 @@ class Player:
         self.possibles_actions = list(datas.lvl1_actions)
         self.temp_possibles_actions = list(self.possibles_actions)
         self.played_cards = {key: 0 for key in (datas.lvl1_actions + datas.lvl2_actions + datas.lvl3_actions)}
+        self.two_last_cards_used = [None, None]
 
     @property
     def dev(self):
@@ -115,12 +116,14 @@ class Player:
             self.possibles_actions = [action for action in self.possibles_actions if action not in ["fuite", "attaque"]]
 
     def chooseCard(self, game):
-        self.temp_possibles_actions = self.possibles_actions
+        self.temp_possibles_actions = [action for action in self.possibles_actions if not(action == self.two_last_cards_used[0] and action == self.two_last_cards_used[1])]
         for action in self.temp_possibles_actions:
             if self.mun + datas.actions_effects.get(action, {}).get("mun", 0) < 0:
                 self.temp_possibles_actions = [card for card in self.temp_possibles_actions if card not in [action]]
         chosen_card = random.choice(self.temp_possibles_actions)
         self.played_cards[chosen_card] += 1
+        self.two_last_cards_used[0] = self.two_last_cards_used[1]
+        self.two_last_cards_used[1] = chosen_card
         return chosen_card
 #-------------------------------------
 class Analyse:
@@ -162,18 +165,21 @@ class Analyse:
             for key in loser.played_cards:
                 self.bad_cards[key] += loser.played_cards[key]
 
-    def printRes(self, accuracy):
+    def printRes(self, num_of_game):
+        accuracy = len(str(num_of_games))-1
         print("\n----------------------------------------\n")
+        print(f"Sur {num_of_game} parties:")
+        print()
         print("Égalités: ", round(self.draws/self.num_of_games*100, accuracy), "%")
         print(f"Nombre de tours par partie moyen: {round(stats.mean(self.turn_per_game), accuracy)}, min: {min(self.turn_per_game)}, max: {max(self.turn_per_game)}")
         print("Nombre d'action espionnage ou sabotage par partie moyen: ", round(stats.mean(self.esp_sab_per_game), accuracy))
         print()
         for card in self.classement:
-            print(f"Force de {card}: {round(self.classement[card]/self.num_of_games*50+50, accuracy)}%")
+            print(f"{card}:{(22-len(card)) * " "}({'X'}) {round(self.classement[card]/self.num_of_games*50+50, accuracy)}%")
 #-------------------------------------
 num_of_games = 100000
 datas = Datas()
 analyse = Analyse(num_of_games)
 game = Game(num_of_games, datas, analyse)
 game.play(num_of_games)
-analyse.printRes(len(str(num_of_games))-1)
+analyse.printRes(num_of_games)
