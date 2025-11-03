@@ -207,13 +207,14 @@ class Analyse:
         print("\nÉgalités: ", round(self.draws/self.num_of_games*100, accuracy), "%")
         print(f"Nombre de tours par partie moyen: {round(stats.mean(self.turn_per_game), accuracy)}, min: {min(self.turn_per_game)}, max: {max(self.turn_per_game)}")
         print("Nombre d'action espionnage ou sabotage par partie moyen: ", round(stats.mean(self.esp_sab_per_game), accuracy))
-        print("\nWinrate des cartes :")
+        print("\n|Carte:                |Winrate:")
+        print("|----------------------|----------")
         for card, rate in self.win_rate.items():
             if rate is None:
                 winrate = "-"
             else:
                 winrate = round(rate * 100, accuracy)
-            print(f"Winrate {card}:{(16-len(card)) * " "}{winrate:.{accuracy}f}%")
+            print(f"|{card}{(22-len(card)) * " "}|{winrate:.{accuracy}f}%")
 #-----------------------------------------------
 num_of_games = 100
 datas = Datas()
