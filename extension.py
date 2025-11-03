@@ -205,7 +205,7 @@ class Analyse:
                 winrate = "-"
             else:
                 winrate = round(rate * 100, accuracy)
-            print(f"Winrate {card}:{(22-len(card))* " "}{winrate:.{accuracy}f}%")
+            print(f"Winrate {card}:{(22-len(card)) * " "}{winrate:.{accuracy}f}%")
 #-----------------------------------------------
 num_of_games = 1000
 datas = Datas()

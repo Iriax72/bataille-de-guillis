@@ -136,20 +136,27 @@ class Analyse:
         self.turn_per_game = []
         self.esp_sab_per_game = []
 
-        self.cards_strength = {key: 0 for key in datas.actions_effects}
-        self.bad_cards = {key: 0 for key in datas.actions_effects}
+        self.winner_cards = {key: 0 for key in datas.actions_effects}
+        self.loser_cards = {key: 0 for key in datas.actions_effects}
 
-        self._classement = {key: (self.cards_strength[key] - self.bad_cards[key]) for key in self.cards_strength}
+        self._win_rate = {key: (self.winner_cards[key] - self.loser_cards[key]) for key in self.winner_cards}
 
     @property
-    def classement(self):
-        dictionnary = {key: (self.cards_strength[key] - self.bad_cards[key]) for key in self.cards_strength}
-        #return sorted(dictionnary.values())
-        return dict(sorted(dictionnary.items(), key=lambda item: item[1]))
+    def win_rate(self):
+        w = self.winner_cards
+        l = self.loser_cards
+        rates = {}
+        for key in w:
+            total = w[key] + l[key]
+            if total == 0:
+                rates[key] = None
+            else:
+                rates[key] = w[key] / total
+        return dict(sorted(rates.items(), key=lambda item: (item[1] is None, -(item[1] or 0)), reverse=True))
 
-    @classement.setter
-    def classement(self, value):
-        self._classement = value
+    @win_rate.setter
+    def win_rate(self, value):
+        self._win_rate = value
 
     def analyseGame(self, winner, loser):
         if winner == "draw":
@@ -161,9 +168,9 @@ class Analyse:
 
         if winner != "draw":
             for key in winner.played_cards:
-                self.cards_strength[key] += winner.played_cards[key]
+                self.winner_cards[key] += winner.played_cards[key]
             for key in loser.played_cards:
-                self.bad_cards[key] += loser.played_cards[key]
+                self.loser_cards[key] += loser.played_cards[key]
 
     def printRes(self, num_of_game):
         accuracy = len(str(num_of_games))-1
@@ -173,11 +180,15 @@ class Analyse:
         print("Égalités: ", round(self.draws/self.num_of_games*100, accuracy), "%")
         print(f"Nombre de tours par partie moyen: {round(stats.mean(self.turn_per_game), accuracy)}, min: {min(self.turn_per_game)}, max: {max(self.turn_per_game)}")
         print("Nombre d'action espionnage ou sabotage par partie moyen: ", round(stats.mean(self.esp_sab_per_game), accuracy))
-        print()
-        for card in self.classement:
-            print(f"{card}:{(22-len(card)) * " "}({'X'}) {round(self.classement[card]/self.num_of_games*50+50, accuracy)}%")
+        print("\nWinrate des cartes :")
+        for card, rate in self.win_rate.items():
+            if rate is None:
+                winrate = "-"
+            else:
+                winrate = round(rate * 100, accuracy)
+            print(f"Einrate {card}:{(22-len(card)) * " "}{winrate:.{accuracy}f}")
 #-------------------------------------
-num_of_games = 100000
+num_of_games = 10000
 datas = Datas()
 analyse = Analyse(num_of_games)
 game = Game(num_of_games, datas, analyse)
