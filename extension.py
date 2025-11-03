@@ -59,7 +59,7 @@ class Game:
             self.ameliorations.pop(random.randint(0, len(self.ameliorations)-1))
 
     def play(self, count):
-        for i in range(count):
+        for partie in range(count):
             self.reset()
             while self.playerA.hp > 0 and self.playerB.hp > 0:
                 analyse.turn_per_game[-1] += 1
@@ -75,6 +75,7 @@ class Game:
             self.winner = self.determineWinner()[0]
             self.loser = self.determineWinner()[1]
             analyse.analyseGame(self.winner, self.loser)
+            print(f"Fin de la partie {partie+1}")
 
     def applyEffect(self, player, effect):
         player.mun += datas.actions_effects.get(effect, {}).get("mun", 0)
@@ -207,7 +208,7 @@ class Analyse:
                 winrate = round(rate * 100, accuracy)
             print(f"Winrate {card}:{(22-len(card)) * " "}{winrate:.{accuracy}f}%")
 #-----------------------------------------------
-num_of_games = 1000
+num_of_games = 100000
 datas = Datas()
 analyse = Analyse(num_of_games)
 game = Game(num_of_games, datas, analyse)
