@@ -3,23 +3,23 @@ import statistics as stats
 #-------------------------------------
 class Datas:
     def __init__(self):
-        self.lvl1_actions = ["repos", "attaque", "parade", "attaque surprise", "developpement"]
-        self.lvl2_actions = ["sieste", "fuite", "attaque en force", "developpement special"]
-        self.lvl3_actions = ["sommeil reparateur", "attaque preparee", "technique de l'ancien", "PHS", "espionnage", "sabotage"]
+        self.lvl1_actions = ["repos", "attaque", "parade", "att-surprise", "dev"]
+        self.lvl2_actions = ["sieste", "fuite", "att-en-force", "dev-special"]
+        self.lvl3_actions = ["sommeil-repa...", "att-preparee", "tech-de-l'ancien", "PHS", "espionnage", "sabotage"]
 
         self.actions_effects = {
             "repos": {"mun": 1},
             "attaque": {"mun": -2, "attaque": 1},
             "parade": {"protection": 1},
-            "attaque surprise": {"mun": -5, "attaque": 2},
-            "developpement": {"dev": 1},
+            "att-surprise": {"mun": -5, "attaque": 2},
+            "dev": {"dev": 1},
             "sieste": {"mun": 2},
             "fuite": {"protection": 2},
-            "attaque en force": {"mun": -8, "attaque": 3},
-            "developpement special": {"mun": 1, "dev": 1, "protection": 1},
-            "sommeil reparateur": {"mun": 1, "protection": 2},
-            "attaque preparee": {"attaque": 1, "protection": 1},
-            "technique de l'ancien": {"mun": -4, "attaque": 2, "protection": 2},
+            "att-en-force": {"mun": -8, "attaque": 3},
+            "dev-special": {"mun": 1, "dev": 1, "protection": 1},
+            "sommeil-repa...": {"mun": 1, "protection": 2},
+            "att-preparee": {"attaque": 1, "protection": 1},
+            "tech-de-l'ancien": {"mun": -4, "attaque": 2, "protection": 2},
             "PHS": {"mun": -2, "protection": 3},
             "espionnage": {"mun": -2, "espionnage": True},
             "sabotage": {"mun": -1, "sabotage": True}
@@ -109,7 +109,7 @@ class Player:
         if self.dev >= 4 and analyse.turn_per_game[-1] >= 6 and self.level == 1:
             self.level = 2
             self.possibles_actions += datas.lvl2_actions
-            self.possibles_actions = [action for action in self.possibles_actions if action not in ["parade", "repos", "developpement"]]
+            self.possibles_actions = [action for action in self.possibles_actions if action not in ["parade", "repos", "dev"]]
         elif self.dev >= 8 and analyse.turn_per_game[-1] >= 14 and self.level == 2:
             self.level = 3
             self.possibles_actions += datas.lvl3_actions
