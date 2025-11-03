@@ -3,9 +3,9 @@ import statistics as stats
 #-------------------------------------
 class Datas:
     def __init__(self):
-        self.lvl1_actions = ["repos", "attaque", "parade", "att-surprise", "dev"]
-        self.lvl2_actions = ["sieste", "fuite", "att-en-force", "dev-special"]
-        self.lvl3_actions = ["sommeil-repa...", "att-preparee", "tech-de-l'ancien", "PHS", "espionnage", "sabotage"]
+        self.lvl1_actions = ["repos", "attaque", "parade", "att-surprise", "dev", "emploi", "entrainement"]
+        self.lvl2_actions = ["sieste", "fuite", "att-en-force", "dev-special", "travai-acharne", "entrainement-intensif"]
+        self.lvl3_actions = ["sommeil-repa...", "att-preparee", "tech-de-l'ancien", "PHS", "espionnage", "sabotage", "buisness"]
 
         self.actions_effects = {
             "repos": {"mun": 1},
@@ -13,31 +13,36 @@ class Datas:
             "parade": {"protection": 1},
             "att-surprise": {"mun": -5, "attaque": 2},
             "dev": {"dev": 1},
+            "emploi": {"gold": 1},
+            "entrainement": {"amelioration": True},
             "sieste": {"mun": 2},
             "fuite": {"protection": 2},
             "att-en-force": {"mun": -8, "attaque": 3},
             "dev-special": {"mun": 1, "dev": 1, "protection": 1},
+            "travail-acharne": {"mun": -5, "gold": 4},
+            "entrainement-intensif": {"mun": 1, "protection": 1, "amelioration": True},
             "sommeil-repa...": {"mun": 1, "protection": 2},
             "att-preparee": {"attaque": 1, "protection": 1},
             "tech-de-l'ancien": {"mun": -4, "attaque": 2, "protection": 2},
             "PHS": {"mun": -2, "protection": 3},
             "espionnage": {"mun": -2, "espionnage": True},
-            "sabotage": {"mun": -1, "sabotage": True}
+            "sabotage": {"mun": -1, "sabotage": True},
+            "buisness": {"gold": 2, "mun": 1, "protection": 1}
         }
 
         self.ameliorations = [
-            "rechargement rapide",
-            "developpement premature",
-            "coach perso",
-            "protec a gogo",
-            "attaque supreme",
-            "station de recuperation",
+            "rechargement-rapide",
+            "dev-premature",
+            "coach-perso",
+            "protec-a-gogo",
+            "att-supreme",
+            "station-de-recup",
             "booste",
             "profiteur",
             "combo",
             "jaloux",
             "chapardeur",
-            "technique du flemmard"
+            "tech-du-flemmard"
         ]
 #-------------------------------------
 class Game:
@@ -80,6 +85,7 @@ class Game:
     def applyEffect(self, player, effect):
         player.mun += datas.actions_effects.get(effect, {}).get("mun", 0)
         player.dev += datas.actions_effects.get(effect, {}).get("dev", 0)
+        player.gold += datas.actions_effects.get(effect, {}).get("gold", 0)
         player.attaque = datas.actions_effects.get(effect, {}).get("attaque", 0)
         player.protection = datas.actions_effects.get(effect, {}).get("protection", 0)
         if datas.actions_effects.get(effect, {}).get("espionnage", False):
@@ -112,6 +118,7 @@ class Player:
         self._dev = 0
         self.level = 1
         self.mun = 0
+        self.gold = 0
         self.attaque = 0
         self.protection = 0
         self.possibles_actions = list(datas.lvl1_actions)
@@ -130,11 +137,11 @@ class Player:
         if self.dev >= 4 and analyse.turn_per_game[-1] >= 6 and self.level == 1:
             self.level = 2
             self.possibles_actions += datas.lvl2_actions
-            self.possibles_actions = [action for action in self.possibles_actions if action not in ["parade", "repos", "dev"]]
+            self.possibles_actions = [action for action in self.possibles_actions if action not in ["parade", "repos", "dev", "entrainement"]]
         elif self.dev >= 8 and analyse.turn_per_game[-1] >= 14 and self.level == 2:
             self.level = 3
             self.possibles_actions += datas.lvl3_actions
-            self.possibles_actions = [action for action in self.possibles_actions if action not in ["fuite", "attaque"]]
+            self.possibles_actions = [action for action in self.possibles_actions if action not in ["fuite", "attaque", "emploi"]]
 
     def chooseCard(self, game):
         self.temp_possibles_actions = [action for action in self.possibles_actions if not(action == self.two_last_cards_used[0] and action == self.two_last_cards_used[1])]
