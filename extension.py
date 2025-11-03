@@ -4,7 +4,7 @@ import statistics as stats
 class Datas:
     def __init__(self):
         self.lvl1_actions = ["repos", "attaque", "parade", "att-surprise", "dev", "emploi", "entrainement"]
-        self.lvl2_actions = ["sieste", "fuite", "att-en-force", "dev-special", "travai-acharne", "entrainement-intensif"]
+        self.lvl2_actions = ["sieste", "fuite", "att-en-force", "dev-special", "travail-acharne", "entrainement-intensif"]
         self.lvl3_actions = ["sommeil-repa...", "att-preparee", "tech-de-l'ancien", "PHS", "espionnage", "sabotage", "buisness"]
 
         self.actions_effects = {
