@@ -30,20 +30,20 @@ class Datas:
             "buisness": {"gold": 2, "mun": 1, "protection": 1}
         }
 
-        self.ameliorations = [
-            "rechargement-rapide",
-            "dev-premature",
-            "coach-perso",
-            "protec-a-gogo",
-            "att-supreme",
-            "station-de-recup",
-            "booste",
-            "profiteur",
-            "combo",
-            "jaloux",
-            "chapardeur",
-            "tech-du-flemmard"
-        ]
+        self.ameliorations = {
+            "rechargement-rapide": {"mun": -4, "gold": -4},
+            "dev-premature": {"mun": -4, "gold": -4},
+            "coach-perso": {"mun": -4, "gold": -4},
+            "protec-a-gogo": {"mun": -4, "gold": -4},
+            "att-supreme": {"mun": -4, "gold": -4},
+            "station-de-recup": {"mun": -4, "gold": -4},
+            "booste": {"mun": -4, "gold": -4},
+            "profiteur": {"mun": -4, "gold": -4},
+            "combo": {"mun": -4, "gold": -4},
+            "jaloux": {"mun": -4, "gold": -4},
+            "chapardeur": {"mun": -4, "gold": -4},
+            "tech-du-flemmard": {"mun": -4, "gold": -4}
+        }
 #-------------------------------------
 class Game:
     def __init__(self, num_of_games, datas, analyse):
@@ -72,8 +72,8 @@ class Game:
                 self.playerA.attaque, self.playerA.protection = 0, 0
                 self.playerB.attaque, self.playerB.protection = 0, 0
 
-                self.applyEffect(self.playerA, self.playerA.chooseCard(self))
-                self.applyEffect(self.playerB, self.playerB.chooseCard(self))
+                self.applyEffect(self.playerA, self.playerA.chooseCard(self), self.playerB)
+                self.applyEffect(self.playerB, self.playerB.chooseCard(self), self.playerA)
 
                 self.attaqueResolve()
 
@@ -82,7 +82,7 @@ class Game:
             analyse.analyseGame(self.winner, self.loser)
             print(f"Fin de la partie {partie+1}")
 
-    def applyEffect(self, player, effect):
+    def applyEffect(self, player, effect, opponent):
         player.mun += datas.actions_effects.get(effect, {}).get("mun", 0)
         player.dev += datas.actions_effects.get(effect, {}).get("dev", 0)
         player.gold += datas.actions_effects.get(effect, {}).get("gold", 0)
@@ -92,6 +92,8 @@ class Game:
             analyse.esp_sab_per_game[-1] += 1
         elif datas.actions_effects.get(effect, {}).get("sabotage", False):
             analyse.esp_sab_per_game[-1] += 1
+        if datas.actions_effects.get(effect, {}).get("amelioration", False):
+            player.getAmelioration(opponent.ameliorations)
 
     def attaqueResolve(self):
         if self.playerA.attaque > self.playerB.protection:
@@ -153,6 +155,15 @@ class Player:
         self.two_last_cards_used[0] = self.two_last_cards_used[1]
         self.two_last_cards_used[1] = chosen_card
         return chosen_card
+    
+    def getAmelioration(self, opponent_amelio):
+        possible_ameliorations = [amelio for amelio in game.ameliorations if amelio not in self.ameliorations and amelio not in opponent_amelio]
+        possible_ameliorations = [amelio for amelio in possible_ameliorations if self.gold + datas.ameliorations.get(amelio, {}).get("gold", 0) >= 0 and self.mun + datas.ameliorations.get(amelio, {}).get("mun", 0) >= 0]
+        if possible_ameliorations:
+            new_amelio = random.choice(possible_ameliorations)
+            self.ameliorations.append(new_amelio)
+            self.gold += datas.ameliorations.get(new_amelio, {}).get("gold", 0)
+            self.mun += datas.ameliorations.get(new_amelio, {}).get("mun", 0)
 #-------------------------------------
 class Analyse:
     def __init__(self, num_of_games):
