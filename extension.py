@@ -72,8 +72,8 @@ class Game:
                 self.playerA.attaque, self.playerA.protection = 0, 0
                 self.playerB.attaque, self.playerB.protection = 0, 0
 
-                self.applyEffect(self.playerA, self.playerA.chooseCard(self), self.playerB)
-                self.applyEffect(self.playerB, self.playerB.chooseCard(self), self.playerA)
+                self.applyEffect(self.playerA, self.playerA.chooseCard(self, self.playerB), self.playerB)
+                self.applyEffect(self.playerB, self.playerB.chooseCard(self, self.playerA), self.playerA)
 
                 self.attaqueResolve()
 
@@ -145,12 +145,49 @@ class Player:
             self.possibles_actions += datas.lvl3_actions
             self.possibles_actions = [action for action in self.possibles_actions if action not in ["fuite", "attaque", "emploi"]]
 
-    def chooseCard(self, game):
-        self.temp_possibles_actions = [action for action in self.possibles_actions if not(action == self.two_last_cards_used[0] and action == self.two_last_cards_used[1])]
-        for action in self.temp_possibles_actions:
-            if self.mun + datas.actions_effects.get(action, {}).get("mun", 0) < 0:
-                self.temp_possibles_actions = [card for card in self.temp_possibles_actions if card not in [action]]
-        chosen_card = random.choice(self.temp_possibles_actions)
+    def chooseCard(self, game, opponent): # il y a pas besoin de game
+        # Start from possible actions but avoid repeating the same two last cards
+        candidates = [action for action in self.possibles_actions if not (action == self.two_last_cards_used[0] and action == self.two_last_cards_used[1])]
+
+        # 1) Filter out actions that would make mun negative
+        candidates = [a for a in candidates if self.mun + datas.actions_effects.get(a, {}).get("mun", 0) >= 0]
+
+        # 2) For actions that grant an amelioration, ensure there's at least one purchasable amelioration
+        filtered = []
+        for a in candidates:
+            if datas.actions_effects.get(a, {}).get("amelioration", False):
+                # find ameliorations available in this game that neither player has and that the player can afford
+                possible_amelios = []
+                for amelio in game.ameliorations:
+                    if amelio in self.ameliorations:
+                        continue
+                    if amelio in opponent.ameliorations:
+                        continue
+                    cost_gold = datas.ameliorations.get(amelio, {}).get("gold", 0)
+                    cost_mun = datas.ameliorations.get(amelio, {}).get("mun", 0)
+                    # costs in datas are negative values (ex: -4), so after applying them the resource must stay >= 0
+                    if self.gold + cost_gold >= 0 and self.mun + cost_mun >= 0:
+                        possible_amelios.append(amelio)
+                if possible_amelios:
+                    filtered.append(a)
+                else:
+                    # no purchasable amelioration -> don't include this action
+                    continue
+            else:
+                filtered.append(a)
+
+        # If nothing remains (very unlikely), fallback to a safe action: prefer 'repos' else any possible action
+        if not filtered:
+            if "repos" in self.possibles_actions:
+                chosen_card = "repos"
+            else:
+                # last resort: ignore resource constraints and pick any allowed action
+                fallback = [action for action in self.possibles_actions if not (action == self.two_last_cards_used[0] and action == self.two_last_cards_used[1])]
+                if not fallback:
+                    fallback = list(self.possibles_actions) or [None]
+                chosen_card = random.choice(fallback)
+        else:
+            chosen_card = random.choice(filtered)
         self.played_cards[chosen_card] += 1
         self.two_last_cards_used[0] = self.two_last_cards_used[1]
         self.two_last_cards_used[1] = chosen_card
@@ -227,7 +264,7 @@ class Analyse:
                 winrate = round(rate * 100, accuracy)
             print(f"|{card}{(22-len(card)) * " "}|{winrate:.{accuracy}f}%")
 #-----------------------------------------------
-num_of_games = 100
+num_of_games = 1000
 datas = Datas()
 analyse = Analyse(num_of_games)
 game = Game(num_of_games, datas, analyse)
