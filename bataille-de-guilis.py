@@ -1,5 +1,6 @@
 import random
 import statistics as stats
+import Analyse from "./Analyse.py"
 #-------------------------------------
 class Datas:
     def __init__(self):
@@ -37,7 +38,7 @@ class Game:
         self.playerA = Player("playerA", datas, analyse)
         self.playerB = Player("playerB", datas, analyse)
         analyse.turn_per_game.append(0)
-        analyse.esp_sab_per_game.append(0)
+        analyse.esp_sab.append(0)
 
     def play(self, count):
         for i in range(count):
@@ -63,9 +64,9 @@ class Game:
         player.attaque = datas.actions_effects.get(effect, {}).get("attaque", 0)
         player.protection = datas.actions_effects.get(effect, {}).get("protection", 0)
         if datas.actions_effects.get(effect, {}).get("espionnage", False):
-            analyse.esp_sab_per_game[-1] += 1
+            analyse.esp_sab[-1] += 1
         elif datas.actions_effects.get(effect, {}).get("sabotage", False):
-            analyse.esp_sab_per_game[-1] += 1
+            analyse.esp_sab[-1] += 1
 
     def attaqueResolve(self):
         if self.playerA.attaque > self.playerB.protection:
@@ -126,71 +127,9 @@ class Player:
         self.two_last_cards_used[1] = chosen_card
         return chosen_card
 #-------------------------------------
-class Analyse:
-    def __init__(self, num_of_games):
-        self.num_of_games = num_of_games
-
-        self.games_won_by_playerA = 0
-        self.games_won_by_playerB = 0
-        self.draws = 0
-        self.turn_per_game = []
-        self.esp_sab_per_game = []
-
-        self.winner_cards = {key: 0 for key in datas.actions_effects}
-        self.loser_cards = {key: 0 for key in datas.actions_effects}
-
-        self._win_rate = {key: (self.winner_cards[key] - self.loser_cards[key]) for key in self.winner_cards}
-
-    @property
-    def win_rate(self):
-        w = self.winner_cards
-        l = self.loser_cards
-        rates = {}
-        for key in w:
-            total = w[key] + l[key]
-            if total == 0:
-                rates[key] = None
-            else:
-                rates[key] = w[key] / total
-        return dict(sorted(rates.items(), key=lambda item: (item[1] is None, -(item[1] or 0)), reverse=True))
-
-    @win_rate.setter
-    def win_rate(self, value):
-        self._win_rate = value
-
-    def analyseGame(self, winner, loser):
-        if winner == "draw":
-            self.draws += 1
-        elif winner.name == "playerB":
-            self.games_won_by_playerB += 1
-        elif winner.name == "playerA":
-            self.games_won_by_playerA += 1
-
-        if winner != "draw":
-            for key in winner.played_cards:
-                self.winner_cards[key] += winner.played_cards[key]
-            for key in loser.played_cards:
-                self.loser_cards[key] += loser.played_cards[key]
-
-    def printRes(self, num_of_game):
-        accuracy = len(str(num_of_games))-1
-        print("\n----------------------------------------\n")
-        print(f"Sur {num_of_game} parties:")
-        print()
-        print("Égalités: ", round(self.draws/self.num_of_games*100, accuracy), "%")
-        print(f"Nombre de tours par partie moyen: {round(stats.mean(self.turn_per_game), accuracy)}, min: {min(self.turn_per_game)}, max: {max(self.turn_per_game)}")
-        print("Nombre d'action espionnage ou sabotage par partie moyen: ", round(stats.mean(self.esp_sab_per_game), accuracy))
-        print("\nWinrate des cartes :")
-        for card, rate in self.win_rate.items():
-            if rate is None:
-                winrate = "-"
-            else:
-                winrate = round(rate * 100, accuracy)
-            print(f"Einrate {card}:{(16-len(card)) * " "}{winrate:.{accuracy}f}%")
-#-------------------------------------
 num_of_games = 10000
 datas = Datas()
-analyse = Analyse(num_of_games)
+analyse = Analyse()
 game = Game(num_of_games, datas, analyse)
 game.play(num_of_games)
 analyse.printRes(num_of_games)
